@@ -1,0 +1,218 @@
+---
+title: "Actblue Markov Analysis"
+author: "Tomer Eldor"
+date: "2/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Political Donations Lifetime Value Analysis using Markovian States of Engagement
+Using R data.table
+
+# Setup 
+First, let's install if needed and load the required libraries.
+I'll be working mainly with "data.table" library, since it is both more computationally efficient, and very convenient to work with. I highly recommend learning that library and speeding up your future R work.
+```{r echo=FALSE}
+# Loading Libraries
+install.packages(c('data.table','RODBC','tidyr','plyr', "dplyr", "ggplot2", "ggthemes", "directlabels", "lubridate"))
+libraries_needed <- c('data.table','tidyr','plyr', "dplyr", "ggplot2", "ggthemes", "directlabels", "lubridate")
+lapply(libraries_needed, require, character.only = TRUE)
+
+# Loading the data using fast data.table reader function: fread
+df_original <- fread("./dt_bernie_repeaters.csv") # (complete or relative) path of dataset
+setDT(df_original) #set as data.table object
+summary(df_original)
+```
+
+# State Time Period Definition
+Let's assume we are working with a dataset of actions: such as purchases, requests, donations, visits, clicks etc.
+We'd want to decide on a time-period to model as one time-step that contains all the most important patterns and cycles of the data, and transform the data into a dataset where each row is that time-period and each column (i.e., amount) summarizes the total values of that variable during that time (i.e., sum of dollars spent that week, or minutes spent on the website per day).
+
+First, we need to think and define the time-period that we'll call a "state", so that we can later chunk the data into rows that summarize these time-periods and call them steps. 
+For this, we'll need to use our on reasoning about the nature of the area and problem. 
+On one hand, we don't want too wide timeframes, since then we would lose valuable information hidden inside by summarizing it with just a few metrics. On the other hand, we don't want too small time-frames, since they don't reflect true cycles, lack sufficient information, and we usually won't have enough data to justify those.
+We want to charachterize what are the natrual "cycle" period of the space.
+For example, let's consider modeling the requests of a user of a ride-hailing platform such as Uber/Lyft/Via. Starting from smaller timeframes - naturally, hours would not be enough to capture ride-hailing patterns; a day might catch some (i.e., commute patterns or evening outings), but each day would have too much random variability such that it's not good for inference. On the other hand, we would also miss grander scheme information from skipping over the next time-frame scale: weekly patterns. We might model each week as a step, since people have their weekly routines and have different likelihoods of wanting to take Ubers both at different times of day but also at different times of the week (i.e., peaking at Friday and Saturday nights). This is probably where we should stop, since we don't have as strong monthly patterns; and while we might have yearly seasonal effects, it is too broad for us to make inference upon. If we have that data, we should verify all those assumptions in the data first. Once we decided on a data time-step, we will later reshape the data to a "wide" dataset where each row contains summary statistic (such as sum or average amount of each column in the original dataset)
+
+#### Actblue: Monthly States (time-periods)
+In this case, we are investigating patterns of donations to election campaigns through the donation platform "actblue". Through analyzing the data (that I've done previously in python here: https://github.com/tomereldor/actblue-donors/blob/master/notebooks/Tomers-actblue-preprocessing.ipynb.), I observed that the majority of repeating donations are done every month; with a few different tiers like weekly and daily donations, as well as lower frequencies or just occasional donations without a reoccuring automatic cycle.
+For that reason, it seems that we should model donations per month, since if it would be shorter, we'd miss the common monthly cycles; but any longer would be too few "steps" in our data that spans for about a year (between 2015-2016). 
+
+
+# Data Preprocessing
+I did much of the data preprocessing already in python. You can find it here: https://github.com/tomereldor/actblue-donors/blob/master/notebooks/Tomers-actblue-preprocessing.ipynb.
+You will need to inspect and clean the data, remove the irrelevant or messy variables, limit the time scope of the data if it is too long, maybe the geographical and other scopes, and make sure you are left with only the population you really want to study.
+For example, I for now only care about "repeating" donors - donors who have donated more than once. For that, As you could see in the python notebook, I integrated many datasets of different time periods, and extracted only the relevent repeating donors.
+
+Now I'll start cleaning and transforming the dataset to the desired format.
+
+## Dataset Formatting
+First, let's make sure each column has the right format
+```{r}
+summary(df_original)
+```
+
+There are three main types of variable formats that we care about for this case:
+  1. Numeric - any numeric value (either int or float) that we will make numeric calculations with or should treat as a scale.
+  2. Date - date information has its own format, which we should use to do calculations with and extract elements from.
+  3. Factor - means categorical variable. 
+      A related format can be "character". That would be good to capture a column of unique strings of text, such as comments or notes. However, if we want to use those for grouping or subsetting (like username), we should convert those to factors since it is really a category.
+We see that V1, that should be just a numeric index, is just "V1", but it's ignorable. 
+Donor_uid is of class charachter while it should be either numeric or a factor - in our case, it's a text-base ID and thus can't be numeric and must be a factor. An alternative would be to convert this ID to a numerical id and do operations on it; but in our case, it holds information (name and zip code) which is nicer to observe. 
+Date should be converted into a date format, as well as previous date.
+Amount, aggregate amount, number of donations, and days_since last are already in numerical format.
+
+```{r}
+# convert donor ID to a factor (categorical) rather than character:
+df_original$donor_uid <- factor(df_original$donor_uid) 
+# convert date columns to dates rather than text
+df_original$date <- as.POSIXct(df_original$date)
+df_original$prev_date <- as.POSIXct(df_original$prev_date)
+
+head(df_original)
+```
+
+```{r}
+summary(df_original)
+```
+
+## Trasnforming to timeframe summaries
+Now we will need to start summarizing the DF per user per state.
+I'll use data.table from now on for most such purposes.
+Our State timeframe is a MONTH. Thus, first step is to add a MONTH column, so that we can group by it.
+We could either choose to do monthly on a variable start day per user according to their first donation, but since we are summarizing all the month's information into one row, it doesn't really matter and we can also do the simpler way of grouping per calendar month. If someone makes a donation every 15 of the month, it will still be summarized to the same aggregate amount a month as it would if she would donate every 1st of the month.
+```{r}
+# let's take just the year + month. Since the data all lists in the same format YYYY-MM-DD, it's easiest just to take the first 6 charachters.
+df_original$monthyear <- substr(df_original$date, start = 1, stop = 7)
+
+
+# I always prefer to experiment first with a smaller sample of the data before doing a heavy or risky operation on the whole dataset. Let's make that sample:
+dt_sample <- sample_n(df_original, 100000)
+dt_sample <- setDT(df_sample) # ensure it's a data.table
+nrow(df_sample) # checking: it does have 100000 rows. 
+setkey(df_sample, donor_uid, monthyear)
+
+
+## Let's show that data.table is more efficient than the common alternative, ddply:
+system.time( 
+  dt <- dt_sample[ , list(total_amount = sum(amount), 
+                               avg_amount = mean(amount), 
+                               n_donations_month = .N,
+                               n_donations_life = mean(n_donations)
+                                ), 
+                        by=list(donor_uid, monthyear)]
+)
+# first position: empty, meaning selecting all rows
+# third position: by=list(donor_uid, monthyear) : here we group by donor ID and MONTH
+# second position: here we specify what happens to each column 
+
+#  user  system elapsed 
+#  0.052   0.008   0.014 
+```
+
+This took 0.014 seconds using data.table
+
+```{r}
+# using ddply
+system.time( 
+  dt_sum_ddply <- ddply(dt_sample, 
+                        ~ donor_uid + monthyear,
+                        summarize, 
+                         total_amount = sum(amount), 
+                         avg_amount = mean(amount), 
+                         n_donations_life = mean(n_donations)
+                        )
+  )   
+#    user  system elapsed 
+# 171.593   0.644 173.036 
+```
+
+Using ddply it took 3+ minutes (173 seconds) versus 0.014 seconds in data.table, meaning **data.table was 12,000 times more efficient**!
+We will continute to use data.table whenever possible and I advise you to utilize it yourselves. 
+
+
+Now that we summarized the dataset to a month-level, we will use it to create month long states. 
+**We want to create a continuum of states per each donor.** Meaning, we want for each donor to have a list of what happened during EACH month of the 10 months; and if they didn't make any contribution during that month, we want that row saying that they had 0 donations!
+This is in order to create a continuous representation of states per donor/user.
+
+Let's go and fill the data for missing lines:
+
+```{r}
+setkey(dt, donor_uid, monthyear)
+dt <- dt[order(donor_uid,monthyear)]
+```
+
+Now, we have many people who only donated one month. That will not add much valuable inforamtion. 
+How many people donated for more than one month?
+```{r}
+# let's add a column: "month_donated" - in how many different months this donor donated?
+# meaning, how many listings does this dataset hold of the same donor?
+dt[, months_donated := .N, by=donor_uid]
+
+# let's plot this as a histogram
+qplot(data = dt, x=months_donated)
+```
+
+For now, for the sake of this exercise of analysis, let's work just with donors who donated in more than one month. This will mean that we'll not have a good overall picture of the probabilities of donating more than one month, but we will limit our analysis FOR THOSE WHO DONATED IN MORE THAN ONE MONTH, to really inspect the hypothesis of continuous / repeated donations versus one-time donations. 
+
+
+```{r}
+dt_repeaters <- dt[months_donated>1, ,]
+# let's work with the data subset of repeating donors:
+
+# get a unique list of all IDs and unique list of all possible monthyears
+# unique_ids <- levels(dt_repeaters$donor_uid) # the levels are based on the original full dataset. Let's do just for this one:
+unique_ids <- unique(dt_repeaters$donor_uid)
+print(paste("unique donors:", length(unique_ids)))
+
+unique_monthyears <-  sort(unique(dt_repeaters$monthyear))
+print(paste("months:", length(unique_monthyears)))
+print(sort(unique_monthyears))
+
+# Now we need to make a new dataset of all permutations
+# there are a number of ways to do this.
+# 1) from base R, you can use expand.grid(column_1, column_2).
+# 2) from tidyR package, you can use the slighlty improved "crossing": crossing(column_1, column_2) and get a tibble.
+# 3) in data.table, you can use "CJ" function, which creates a join data.table, with the "UNIQUE" option on.
+
+# now let's use data.table join data table to get a data table with all permutations. 
+library(data.table)
+dt_combos <-  CJ(donor_uid = unique_ids, monthyear = unique_monthyears, unique = TRUE)
+head(dt_combos)
+```
+
+
+Now that we have our base table with all required IDs and timesteps, we can fill in data where we have recorded values. The rest will be donations of 0 since they didn't donate.
+Since we need ALL rows from the first (LEFT) table of permutations and keeping even the ones without matches from the RIGHT table, while inserting only the matched rows from the second (RIGHT) table, this is called a LEFT-OUTER JOIN - a concept taken mainly from SQL language. It is implemented in multiple ways in R: as merge functions in base, in dplyr, and in our case in data.table. For a more complete guide on joins in data.table, see this tutorial:
+https://rstudio-pubs-static.s3.amazonaws.com/52230_5ae0d25125b544caab32f75f0360e775.html
+```{r}
+# now, combine this permutations dataset with the actual info from our dt_repeaters dataset.
+# first, we need to set the columns we want to match on as keys:
+setkey(dt_combos, donor_uid, monthyear)
+setkey(dt_repeaters, donor_uid, monthyear)
+
+# now, we perform the match!
+# the all.x part means - take everything from the LEFT table (X=LEFT, versus RIGHT=Y) 
+dt.all <- merge(dt_combos,dt_repeaters,  all.x=TRUE)
+dt.all
+```
+
+GREAT! Now we have the merged data.table. Now all we need to complete this stage is to fill out the dataset NAs with the relevant values: 0's for the amounts and n_donations, and the unique user value for n_donations_life and months_donated.
+
+```{r}
+# let's fill out the NA lines with relevant values:
+dt.all[is.na(total_amount)]$total_amount <- 0
+dt.all[is.na(avg_amount)]$avg_amount <- 0
+dt.all[is.na(n_donations_month)]$n_donations_month <- 0
+
+# now fill with user average
+```
+
+
+
+# Matrix Transition
+
+
