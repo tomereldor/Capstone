@@ -22,4 +22,4 @@ In this repository you will find:
 
 
 DATA: If the dataset is not found here, it is because it was too large to upload. You can get my already processed files from my folder (request permission if needed and I will grant it) here:
-https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ&authuser=to@minerva.kgi.edu.
+https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ
