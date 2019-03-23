@@ -19,6 +19,6 @@ The goal of this capstone is manifold:
 
 In this repository you will find:
 - The coding tutorial and application of this analysis on the ActBlue donations data. View the tutorial and the entire project on [RPubs](http://rpubs.com/tomereldor/actblue).
-- Download the R Notebook presented in the RPubs above at the [Actblue Markov Tutorial.Rmd](https://github.com/tomereldor/Capstone/blob/master/Actblue_Markov_Tutorial_3_for_publishing.Rmd)") file above
-– The [written report](http://htmlpreview.github.io/?https://github.com/tomereldor/Capstone/blob/master/ACTBLUE%20Analysis/ACTBLUEAnalysis.html) presenting the ActBlue case study and findings: [here](http://htmlpreview.github.io/?https://github.com/tomereldor/Capstone/blob/master/ACTBLUE%20Analysis/ACTBLUEAnalysis.html).
+– The [written report](http://htmlpreview.github.io/?https://github.com/tomereldor/Capstone/blob/master/ACTBLUE%20Analysis/ACTBLUEAnalysis.html) presenting the ActBlue case study and findings.  
+- Download the R Notebook presented in the RPubs above at the [Actblue Markov Tutorial.Rmd](https://github.com/tomereldor/Capstone/blob/master/Actblue_Markov_Tutorial_3_for_publishing.Rmd) file above.   
 - [DATA](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ): The Dataset was too big to upload here, but you can get my already processed files from my drive (request permission if needed and I will grant it) [here](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ).
