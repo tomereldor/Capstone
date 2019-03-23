@@ -1,11 +1,11 @@
 # Quantifying Your Customer’s Lifetime Value by Markovian Engagement States
 ## Markov Modeling Customers by Engagement States for Quantifying Lifetime Value and Further Insights.
 -----------------------------------
-**Tomer Eldor
-Majors: Computational Sciences: Data Science, Social Sciences: Economics
-Capstone Project
-Minerva Schools
-2019**
+**Tomer Eldor  
+Majors: Computational Sciences: Data Science, Social Sciences: Economics  
+Capstone Project  
+Minerva Schools  
+2019**  
 
 Abstract
 This capstone project lays out a framework with a user-friendly toolkit for modeling users engagement states as a markov chain, using it for prediction of future engagement states and calculating the Lifetime Value for each engagement group. It consists of:
