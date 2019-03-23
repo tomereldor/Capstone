@@ -23,10 +23,10 @@ Check out these links below:
 1. View the [Analysis Report Webpage](http://htmlpreview.github.io/?https://github.com/tomereldor/Capstone/blob/master/ACTBLUE%20Analysis/ACTBLUEAnalysis.html) presenting the ActBlue case study and findings.  
 2. See the step-by-step R Coding Tutorial on [RPubs](http://rpubs.com/tomereldor/actblue) for how I applied framework on the ActBlue donations data and how you might do it for your data
 3. To replicate, download the [R Notebook](https://github.com/tomereldor/Capstone/blob/master/Actblue_Markov_Tutorial_3_for_publishing.Rmd) presented in the RPubs above.
+- Download the data. The [original data](https://archive.org/details/actblue-fec-filings-april-2015-to-feb-2016) comes from the archives of ActBlue data after being cleaned by publishers. I have preprocessed it previous to this code above to be uniform [here](https://github.com/tomereldor/actblue-donors/blob/master/notebooks/Tomers-actblue-preprocessing.ipynb). You can get my already processed data from my drive (request permission if needed and I will grant it) [here](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ) and replicate this notebook exactly.
 
-### Data
+### Data Details
 
 __ActBlue campaign finance filings.__  ActBlue, a political action committee, processes the vast majority of contributions to Bernie Sanders's 2016 presidential campaign. The analyses use ActBlue's `PRE-RUNOFF`, `POST-SPECIAL`, `PRE-PRIMARY`, `POST-RUN-OFF`, `MID-YEAR`, `YEAR-END`, `FEB MONTHLY`, and `MARCH MONTHLY` filings sent to the Federal Election Commission. These filings cover the entirety of the Sanders presidential campaign, which began on April 30, 2015. The data include all "receipts" for this time period, and were downloaded from ProPublica's [FEC Itemizer](https://projects.propublica.org/itemizer/committee/C00401224/2016). Some rows in the files contained unmatched quotation marks (e.g., `"NOT EMPLOYED,`) in the `employer` field. BuzzFeed News fixed those rows by hand; you can download these cleaned-up files [here](https://archive.org/details/actblue-fec-filings-april-2015-to-feb-2016).
-- Download the [data](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ). The original data 
-https://archive.org/details/actblue-fec-filings-april-2015-to-feb-2016
-The Dataset was too big to upload here, but you can get my already processed files from my drive (request permission if needed and I will grant it) [here](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ). 
+
+
