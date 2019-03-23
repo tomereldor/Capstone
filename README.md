@@ -18,8 +18,6 @@ The goal of this capstone is manifold:
 4. Transfer this analysis further into a political sphere and donations data rather then for-profit data, show that it is useful there, and provide the insights derived from this analysis that could be useful for future democratic political campaigns specifically or donation campaigns in general. 
 
 In this repository you will find:
-- The coding tutorial and application of this analysis on the ActBlue donations data, in the R Markdown Notebook ("[Actblue Markov Tutorial](https://github.com/tomereldor/Capstone/blob/master/Actblue_Markov_Tutorial_3_for_publishing.Rmd)"). This is mostly if you want to download the code. If you want to see it in action, go to [rpubs.com/tomereldor/markov](http://rpubs.com/tomereldor/markov).
+- The coding tutorial and application of this analysis on the ActBlue donations data, in the R Markdown Notebook ("[Actblue Markov Tutorial](https://github.com/tomereldor/Capstone/blob/master/Actblue_Markov_Tutorial_3_for_publishing.Rmd)"). This is mostly if you want to download the code. If you want to see it in action, go to [rpubs.com/tomereldor/actblue](http://rpubs.com/tomereldor/actblue).
 – The written report presenting the ActBlue case study and findings: [here](http://htmlpreview.github.io/?https://github.com/tomereldor/Capstone/blob/master/ACTBLUE%20Analysis/ACTBLUEAnalysis.html).
-
-DATA: If the dataset is not found here, it is because it was too large to upload. You can get my already processed files from my folder (request permission if needed and I will grant it) here:
-https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ
+- DATA: The Dataset was too big to upload here, but you can get my already processed files from my drive (request permission if needed and I will grant it) [here](https://drive.google.com/open?id=19FZoWqePhnudd7lentiQue8hje8RbGzZ).
