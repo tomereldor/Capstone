@@ -1,5 +1,5 @@
 # Quantifying Your Customer’s Lifetime Value by Markovian Engagement States
-### Capstone Project at Minerva: Markov Modeling Customers by Engagement States for Quantifying Lifetime Value and Further Insights.** 
+## Markov Modeling Customers by Engagement States for Quantifying Lifetime Value and Further Insights.
 -----------------------------------
 **Tomer Eldor
 Majors: Computational Sciences: Data Science, Social Sciences: Economics
